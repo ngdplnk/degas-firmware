@@ -3,7 +3,7 @@
 name: 'Degas Firmware Updater'
 
 on:
-  # Schedule to run every day at 8:15 AM CLT (12:15 UTC)
+  # Schedule to run every day at 8:15 AM (12:15 UTC)
   schedule:
     - cron: '15 12 * * *'
   
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: false # Ensures if one region fails, others will still run
+      fail-fast: false
       matrix:
         config:
           - { device: 'degas', region: 'global' }
@@ -29,34 +29,42 @@ jobs:
       - name: '📥 Checkout Repository'
         uses: actions/checkout@v4
         with:
-          # Use the PAT to allow pushing changes
           token: ${{ secrets.GH_PAT }}
 
       - name: '🛠️ Setup Tools'
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq unzip
+          sudo apt-get install -y jq
 
-      - name: '🔍 Fetch Latest Firmware Info'
+      - name: '🔍 Fetch Latest Firmware Info (Updated API)'
         id: fetch_info
         run: |
-          # This URL is an example from a known community API.
-          API_URL="https://raw.githubusercontent.com/XiaomiFirmwareUpdater/mi-firm-auto-updater/master/data/devices/stable/${{ matrix.config.device }}.json"
+          # Use the new, stable V4 API endpoint from xiaomifirmwareupdater.com
+          API_URL="https://xiaomifirmwareupdater.com/api/v4/firmwares/stable/${{ matrix.config.device }}"
           
           echo "Fetching data for ${{ matrix.config.device }} (${{ matrix.config.region }}) from ${API_URL}"
           
-          FIRMWARE_JSON=$(curl -sL "${API_URL}" | jq --arg REGION "${{ matrix.config.region }}" '.[] | select(.branch == "stable" and .method == "fastboot" and .region == $REGION)')
+          # Fetch the full API response for the device
+          API_RESPONSE=$(curl -sL "${API_URL}")
           
-          if [[ -z "$FIRMWARE_JSON" ]]; then
-            echo "No firmware found for region: ${{ matrix.config.region }}"
+          # This complex jq query finds the latest stable firmware that has a fastboot ROM for the specified region.
+          # The API returns an array, sorted by date, so we take the first valid one we find ([0]).
+          FIRMWARE_JSON=$(echo "$API_RESPONSE" | jq --arg REGION "${{ matrix.config.region }}" '
+            (map(select(.branch == "stable" and (.roms[] | select(.region == $REGION and .fastboot != null)))))[0]
+          ')
+
+          if [[ -z "$FIRMWARE_JSON" || "$FIRMWARE_JSON" == "null" ]]; then
+            echo "No stable fastboot firmware found for region: ${{ matrix.config.region }}"
             echo "IS_NEW=false" >> $GITHUB_OUTPUT
             exit 0
           fi
           
+          # Now parse the details from the valid JSON we found
           VERSION=$(echo "$FIRMWARE_JSON" | jq -r '.version')
-          FILENAME=$(echo "$FIRMWARE_JSON" | jq -r '.filename')
-          DOWNLOAD_URL=$(echo "$FIRMWARE_JSON" | jq -r '.download')
-          
+          ROM_DETAILS=$(echo "$FIRMWARE_JSON" | jq --arg REGION "${{ matrix.config.region }}" '.roms[] | select(.region == $REGION)')
+          FILENAME=$(echo "$ROM_DETAILS" | jq -r '.fastboot.filename')
+          DOWNLOAD_URL=$(echo "$ROM_DETAILS" | jq -r '.fastboot.url')
+
           echo "Found version: ${VERSION}"
           
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
@@ -83,10 +91,12 @@ jobs:
         if: steps.fetch_info.outputs.IS_NEW == 'true'
         run: |
           echo "Downloading ${{ steps.fetch_info.outputs.FILENAME }}..."
-          curl -Lo ${{ steps.fetch_info.outputs.FILENAME }} "${{ steps.fetch_info.outputs.DOWNLOAD_URL }}"
+          # Using wget with progress bar for better logging
+          wget -q --show-progress -O ${{ steps.fetch_info.outputs.FILENAME }} "${{ steps.fetch_info.outputs.DOWNLOAD_URL }}"
           
           echo "Extracting files..."
           mkdir -p extracted_firmware
+          # The -C flag tells tar to extract files into the specified directory
           tar -xvf ${{ steps.fetch_info.outputs.FILENAME }} -C extracted_firmware
 
       - name: '🚀 Create GitHub Release and Upload Files'
