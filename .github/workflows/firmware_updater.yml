@@ -10,6 +10,7 @@ on:
 jobs:
   process_firmware_files:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       matrix:
@@ -46,14 +47,21 @@ jobs:
              echo "Multiple URLs found. Starting speed-test..."
              FASTEST_URL=""
              MAX_SPEED=0
+             MAX_TEST_TIME=3
+             TEST_SIZE_BYTES=10485760
+
              for URL in "${DOWNLOAD_URLS[@]}"; do
-                echo "Testing URL: $URL"
-                SPEED=$(curl --range 0-20971520 -s -o /dev/null -w "%{speed_download}" "$URL" | cut -d'.' -f1)
+                echo "Testing URL: $URL (Timeout: ${MAX_TEST_TIME}s, Size: 10MB)"
+                SPEED=$(curl -L --connect-timeout 5 --max-time $MAX_TEST_TIME --range 0-$TEST_SIZE_BYTES -s -o /dev/null -w "%{speed_download}" "$URL" | cut -d'.' -f1)
+                
                 if [ -z "$SPEED" ] || [ "$SPEED" -eq 0 ]; then
-                  echo "Test failed or speed was 0."
+                  echo "Test failed, timed out, or speed was 0. Skipping this URL."
                   continue
                 fi
-                echo "Speed: ${SPEED} bytes/s"
+
+                SPEED_MBPS=$(awk -v speed_bps="$SPEED" 'BEGIN { printf "%.2f", speed_bps * 8 / 1024 / 1024 }')
+                echo "Result: ${SPEED_MBPS} Mbps"
+
                 if (( SPEED > MAX_SPEED )); then
                    MAX_SPEED=$SPEED
                    FASTEST_URL=$URL
@@ -62,7 +70,7 @@ jobs:
           fi
 
           if [ -z "$FASTEST_URL" ]; then
-            echo "ERROR: Could not determine the fastest URL after speed-tests."
+            echo "ERROR: Could not determine the fastest URL. All speed-tests may have failed."
             exit 1
           fi
 
@@ -122,7 +130,7 @@ jobs:
 
           echo "Creating release with tag: ${TAG}"
           gh release create "$TAG" \
-            --title "Firmware ${VERSION} [${REGION_UPPER}] - [degas]" \
+            --title "${VERSION} [${REGION_UPPER}]" \
             --notes "$RELEASE_NOTES" \
             extracted_firmware/*
-
+            
