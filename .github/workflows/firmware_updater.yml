@@ -114,18 +114,18 @@ jobs:
           DUMP_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           TREE_STRUCTURE=$(tree -F extracted_firmware)
           cat > release_notes.txt <<EOF
-- **Total Size:** ${TOTAL_SIZE}
-- **File Count:** ${FILE_COUNT}
-- **Dump Date:** ${DUMP_DATE}
+            - **Total Size:** ${TOTAL_SIZE}
+            - **File Count:** ${FILE_COUNT}
+            - **Dump Date:** ${DUMP_DATE}
+            
+            Downloaded from: ${{ steps.firmware_info.outputs.DOWNLOAD_URL }}
 
-Downloaded from: ${{ steps.firmware_info.outputs.DOWNLOAD_URL }}
-
----
-**Extracted File Structure:**
-\`\`\`
-${TREE_STRUCTURE}
-\`\`\`
-EOF
+            ---
+            **Extracted File Structure:**
+            \`\`\`
+            ${TREE_STRUCTURE}
+            \`\`\`
+            EOF
           echo "Creating release with tag: ${TAG}"
           gh release create "$TAG" \
             --title "${VERSION} [${REGION_UPPER}]" \
