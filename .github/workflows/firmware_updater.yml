@@ -89,7 +89,7 @@ jobs:
 
           echo "Creating release with tag: ${TAG}"
           gh release create "$TAG" \
-            --title "Firmware ${VERSION} [${REGION_UPPER}] - [degas]" \
+            --title "${VERSION} [${REGION_UPPER}]" \
             --notes "$RELEASE_NOTES" \
             extracted_firmware/*
 
