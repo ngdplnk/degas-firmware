@@ -23,7 +23,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y aria2
+          sudo apt-get install -y aria2 tree # Instalar 'tree' para la estructura de directorios
 
       - name: Read Firmware Info and Select Fastest URL
         id: firmware_info
@@ -47,7 +47,7 @@ jobs:
              echo "Multiple URLs found. Starting speed-test..."
              FASTEST_URL=""
              MAX_SPEED=0
-             MAX_TEST_TIME=3
+             MAX_TEST_TIME=5
              TEST_SIZE_BYTES=10485760
 
              for URL in "${DOWNLOAD_URLS[@]}"; do
@@ -118,6 +118,8 @@ jobs:
           TOTAL_SIZE=$(du -sh extracted_firmware | awk '{print $1}')
           FILE_COUNT=$(find extracted_firmware -type f | wc -l)
           DUMP_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          TREE_STRUCTURE=$(tree -F extracted_firmware)
 
           RELEASE_NOTES=$(cat <<EOF
           - **Total Size:** ${TOTAL_SIZE}
@@ -125,6 +127,12 @@ jobs:
           - **Dump Date:** ${DUMP_DATE}
 
           Downloaded from: ${{ steps.firmware_info.outputs.DOWNLOAD_URL }}
+
+          ---
+          **Extracted File Structure:**
+          ```
+          ${TREE_STRUCTURE}
+          ```
           EOF
           )
 
@@ -132,5 +140,5 @@ jobs:
           gh release create "$TAG" \
             --title "${VERSION} [${REGION_UPPER}]" \
             --notes "$RELEASE_NOTES" \
-            extracted_firmware/*
+            extracted_firmware/**/*
             
