@@ -19,7 +19,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Read Firmware Info for ${{ matrix.region }}
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2
+
+      - name: Read Firmware Info and Select Fastest URL
         id: firmware_info
         run: |
           FILE_PATH="firmware_updates/${{ matrix.region }}.txt"
@@ -27,16 +32,46 @@ jobs:
             echo "File for region ${{ matrix.region }} not found. Skipping."
             exit 0
           fi
+          
           VERSION=$(sed -n '1p' "$FILE_PATH" | tr -d '[:space:]')
-          DOWNLOAD_URL=$(sed -n '2p' "$FILE_PATH" | tr -d '[:space:]')
-          FILENAME=$(basename "${DOWNLOAD_URL}")
-          if [ -z "$VERSION" ] || [ -z "$DOWNLOAD_URL" ]; then
-            echo "ERROR: Version or URL is missing in ${FILE_PATH}."
+          DOWNLOAD_URLS=($(sed '1d' "$FILE_PATH"))
+
+          if [ ${#DOWNLOAD_URLS[@]} -eq 0 ]; then
+             echo "ERROR: No download URLs found in ${FILE_PATH}."
+             exit 1
+          elif [ ${#DOWNLOAD_URLS[@]} -eq 1 ]; then
+             FASTEST_URL="${DOWNLOAD_URLS[0]}"
+             echo "Only one URL found. Skipping speed-test."
+          else
+             echo "Multiple URLs found. Starting speed-test..."
+             FASTEST_URL=""
+             MAX_SPEED=0
+             for URL in "${DOWNLOAD_URLS[@]}"; do
+                echo "Testing URL: $URL"
+                SPEED=$(curl --range 0-20971520 -s -o /dev/null -w "%{speed_download}" "$URL" | cut -d'.' -f1)
+                if [ -z "$SPEED" ] || [ "$SPEED" -eq 0 ]; then
+                  echo "Test failed or speed was 0."
+                  continue
+                fi
+                echo "Speed: ${SPEED} bytes/s"
+                if (( SPEED > MAX_SPEED )); then
+                   MAX_SPEED=$SPEED
+                   FASTEST_URL=$URL
+                fi
+             done
+          fi
+
+          if [ -z "$FASTEST_URL" ]; then
+            echo "ERROR: Could not determine the fastest URL after speed-tests."
             exit 1
           fi
+
+          echo "Fastest URL selected: ${FASTEST_URL}"
+          FILENAME=$(basename "${FASTEST_URL}")
+
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "FILENAME=${FILENAME}" >> $GITHUB_OUTPUT
-          echo "DOWNLOAD_URL=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
+          echo "DOWNLOAD_URL=${FASTEST_URL}" >> $GITHUB_OUTPUT
           echo "DATA_FOUND=true" >> $GITHUB_OUTPUT
 
       - name: Check if Release Already Exists
@@ -57,8 +92,8 @@ jobs:
       - name: Download and Extract Firmware
         if: steps.check_release.outputs.IS_NEW == 'true'
         run: |
-          echo "Downloading ${{ steps.firmware_info.outputs.FILENAME }}..."
-          wget -q --show-progress -O "${{ steps.firmware_info.outputs.FILENAME }}" "${{ steps.firmware_info.outputs.DOWNLOAD_URL }}"
+          echo "Downloading ${{ steps.firmware_info.outputs.FILENAME }} with aria2..."
+          aria2c -x 16 -s 16 -k 1M -o "${{ steps.firmware_info.outputs.FILENAME }}" "${{ steps.firmware_info.outputs.DOWNLOAD_URL }}"
           echo "Extracting files..."
           mkdir -p extracted_firmware
           tar -xvf "${{ steps.firmware_info.outputs.FILENAME }}" -C extracted_firmware
@@ -72,24 +107,22 @@ jobs:
           REGION_UPPER=$(echo "${{ matrix.region }}" | tr 'a-z' 'A-Z')
           TAG="v${VERSION}-${{ matrix.region }}"
           
-          # Gather release information
           TOTAL_SIZE=$(du -sh extracted_firmware | awk '{print $1}')
           FILE_COUNT=$(find extracted_firmware -type f | wc -l)
           DUMP_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-          # Create release notes body
           RELEASE_NOTES=$(cat <<EOF
           - **Total Size:** ${TOTAL_SIZE}
           - **File Count:** ${FILE_COUNT}
           - **Dump Date:** ${DUMP_DATE}
 
-          Original Download URL: ${{ steps.firmware_info.outputs.DOWNLOAD_URL }}
+          Downloaded from: ${{ steps.firmware_info.outputs.DOWNLOAD_URL }}
           EOF
           )
 
           echo "Creating release with tag: ${TAG}"
           gh release create "$TAG" \
-            --title "${VERSION} [${REGION_UPPER}]" \
+            --title "Firmware ${VERSION} [${REGION_UPPER}] - [degas]" \
             --notes "$RELEASE_NOTES" \
             extracted_firmware/*
 
