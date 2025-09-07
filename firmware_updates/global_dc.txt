@@ -1,0 +1,4 @@
+OS2.0.8.0.VNEMIDC
+https://bigota.d.miui.com/OS2.0.8.0.VNEMIDC/degas_dc_global_images_OS2.0.8.0.VNEMIDC_20250428.0000.00_15.0_global_dc_ff7a928061.tgz
+https://hugeota.d.miui.com/OS2.0.8.0.VNEMIDC/degas_dc_global_images_OS2.0.8.0.VNEMIDC_20250428.0000.00_15.0_global_dc_ff7a928061.tgz
+https://bn.d.miui.com/OS2.0.8.0.VNEMIDC/degas_dc_global_images_OS2.0.8.0.VNEMIDC_20250428.0000.00_15.0_global_dc_ff7a928061.tgz
