@@ -23,7 +23,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y aria2 tree # Instalar 'tree' para la estructura de directorios
+          sudo apt-get install -y aria2 tree
 
       - name: Read Firmware Info and Select Fastest URL
         id: firmware_info
@@ -105,6 +105,12 @@ jobs:
           echo "Extracting files..."
           mkdir -p extracted_firmware
           tar -xvf "${{ steps.firmware_info.outputs.FILENAME }}" -C extracted_firmware
+          # Split any file larger than 2GB in extracted_firmware/
+          find extracted_firmware -type f -size +2000M | while read -r file; do
+            echo "Splitting large file: $file"
+            split -b 2000M "$file" "$file.part-"
+            rm -f "$file"
+          done
 
       - name: Create GitHub Release and Upload Files
         if: steps.check_release.outputs.IS_NEW == 'true'
