@@ -1,0 +1,4 @@
+OS2.0.202.0.VNEIDXM
+https://bigota.d.miui.com/OS2.0.202.0.VNEIDXM/degas_id_global_images_OS2.0.202.0.VNEIDXM_20250814.0000.00_15.0_id_ecb0461b8c.tgz
+https://hugeota.d.miui.com/OS2.0.202.0.VNEIDXM/degas_id_global_images_OS2.0.202.0.VNEIDXM_20250814.0000.00_15.0_id_ecb0461b8c.tgz
+https://bn.d.miui.com/OS2.0.202.0.VNEIDXM/degas_id_global_images_OS2.0.202.0.VNEIDXM_20250814.0000.00_15.0_id_ecb0461b8c.tgz
