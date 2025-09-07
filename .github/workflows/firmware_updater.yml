@@ -140,5 +140,4 @@ jobs:
           gh release create "$TAG" \
             --title "${VERSION} [${REGION_UPPER}]" \
             --notes "$RELEASE_NOTES" \
-            extracted_firmware/**/*
-            
+            $(find extracted_firmware -type f)
