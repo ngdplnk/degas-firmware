@@ -1,4 +1,4 @@
-OS2.0.203.0.VNETWXM
-https://bigota.d.miui.com/OS2.0.203.0.VNETWXM/degas_tw_global_images_OS2.0.203.0.VNETWXM_20250814.0000.00_15.0_tw_9e0b8ab070.tgz
-https://hugeota.d.miui.com/OS2.0.203.0.VNETWXM/degas_tw_global_images_OS2.0.203.0.VNETWXM_20250814.0000.00_15.0_tw_9e0b8ab070.tgz
-https://bn.d.miui.com/OS2.0.203.0.VNETWXM/degas_tw_global_images_OS2.0.203.0.VNETWXM_20250814.0000.00_15.0_tw_9e0b8ab070.tgz
+OS2.0.204.0.VNETWXM
+https://bigota.d.miui.com/OS2.0.204.0.VNETWXM/degas_tw_global_images_OS2.0.204.0.VNETWXM_20250918.0000.00_15.0_tw_2faa5f4111.tgz
+https://hugeota.d.miui.com/OS2.0.204.0.VNETWXM/degas_tw_global_images_OS2.0.204.0.VNETWXM_20250918.0000.00_15.0_tw_2faa5f4111.tgz
+https://bn.d.miui.com/OS2.0.204.0.VNETWXM/degas_tw_global_images_OS2.0.204.0.VNETWXM_20250918.0000.00_15.0_tw_2faa5f4111.tgz
