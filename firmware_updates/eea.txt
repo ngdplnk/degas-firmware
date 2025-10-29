@@ -1,4 +1,4 @@
-OS2.0.206.0.VNEEUXM
-https://bigota.d.miui.com/OS2.0.206.0.VNEEUXM/degas_eea_global_images_OS2.0.206.0.VNEEUXM_20250903.0000.00_15.0_eea_bedd50c74e.tgz
-https://hugeota.d.miui.com/OS2.0.206.0.VNEEUXM/degas_eea_global_images_OS2.0.206.0.VNEEUXM_20250903.0000.00_15.0_eea_bedd50c74e.tgz
-https://bn.d.miui.com/OS2.0.206.0.VNEEUXM/degas_eea_global_images_OS2.0.206.0.VNEEUXM_20250903.0000.00_15.0_eea_bedd50c74e.tgz
+OS2.0.207.0.VNEEUXM
+https://bigota.d.miui.com/OS2.0.207.0.VNEEUXM/degas_eea_global_images_OS2.0.207.0.VNEEUXM_20251010.0000.00_15.0_eea_45d24a9714.tgz
+https://hugeota.d.miui.com/OS2.0.207.0.VNEEUXM/degas_eea_global_images_OS2.0.207.0.VNEEUXM_20251010.0000.00_15.0_eea_45d24a9714.tgz
+https://bn.d.miui.com/OS2.0.207.0.VNEEUXM/degas_eea_global_images_OS2.0.207.0.VNEEUXM_20251010.0000.00_15.0_eea_45d24a9714.tgz
